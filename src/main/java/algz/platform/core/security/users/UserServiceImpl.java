@@ -33,7 +33,7 @@ public class UserServiceImpl implements UserDetailsService {
       boolean accountNonLocked = true;
       //取得用户的权限
       List<String> roles = new ArrayList();
-      roles.add("ROLE_USER");
+      roles.add("ADMIN1");
       Collection<GrantedAuthority> authorities = new HashSet<GrantedAuthority>();  
       for (String role : roles) {  
           SimpleGrantedAuthority simpleAuth = new SimpleGrantedAuthority(role);  

@@ -11,6 +11,7 @@ public class HelloServiceImpl implements HelloService {
 	private HelloDao helloDao;
 	
 	@Transactional
+	//@Transactional(propagation=Propagation.NOT_SUPPORTED,readOnly=true) 
 	public String printHello() {
 		return "this service "+helloDao.inputDate();
 	}

@@ -3,6 +3,7 @@ package algz.platform.core.security;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.security.access.AccessDecisionManager;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
@@ -12,7 +13,11 @@ import org.springframework.security.core.GrantedAuthority;
 
 
 /**
- * AccessdecisionManager在Spring security中是很重要的。
+ * 
+ * 1.InitializingBean接口，它仅包含一个方法：afterPropertiesSet(),
+ * Spring在设置完一个bean所有的合作者后，会检查bean是否实现了InitializingBean接口，
+ * 如果实现就调用bean的afterPropertiesSet方法,一般用于控制台跟踪打印信息.
+ * 2.AccessdecisionManager 接口在Spring security中是很重要的。
  * 
  * 在验证部分简略提过了，所有的Authentication实现需要保存在一个GrantedAuthority对象数组中。 这就是赋予给主体的权限。
  * GrantedAuthority对象通过AuthenticationManager 保存到
@@ -23,22 +28,22 @@ import org.springframework.security.core.GrantedAuthority;
  * 被AbstractSecurityInterceptor调用， 它用来作最终访问控制的决定。
  * 这个AccessDecisionManager接口包含三个方法：
  * 
- * void decide(Authentication authentication, Object secureObject,
- * List<ConfigAttributeDefinition> config) throws AccessDeniedException; boolean
- * supports(ConfigAttribute attribute); boolean supports(Class clazz);
- * 
+ * (1)void decide(Authentication authentication, Object secureObject,
+ * List<ConfigAttributeDefinition> config) throws AccessDeniedException;
  * 从第一个方法可以看出来，AccessDecisionManager使用方法参数传递所有信息，这好像在认证评估时进行决定。
  * 特别是，在真实的安全方法期望调用的时候，传递安全Object启用那些参数。 比如，让我们假设安全对象是一个MethodInvocation。
  * 很容易为任何Customer参数查询MethodInvocation，
  * 然后在AccessDecisionManager里实现一些有序的安全逻辑，来确认主体是否允许在那个客户上操作。
  * 如果访问被拒绝，实现将抛出一个AccessDeniedException异常。
+ *  
+ * (2)boolean supports(ConfigAttribute attribute); 
+ * 在启动的时候被AbstractSecurityInterceptor调用，来决定AccessDecisionManager
+ * 是否可以执行传递ConfigAttribute。
  * 
- * 这个 supports(ConfigAttribute) 方法在启动的时候被
- * AbstractSecurityInterceptor调用，来决定AccessDecisionManager
- * 是否可以执行传递ConfigAttribute。 supports(Class)方法被安全拦截器实现调用，
- * 包含安全拦截器将显示的AccessDecisionManager支持安全对象的类型。
+ * (3)boolean supports(Class clazz);
+ * 被安全拦截器实现调用，包含安全拦截器将显示的AccessDecisionManager支持安全对象的类型。
  */
-public class SecurityAccessDecisionManager implements AccessDecisionManager {
+public class SecurityAccessDecisionManager implements AccessDecisionManager,InitializingBean {
 
 	@Override
 	public void decide(Authentication authentication, Object object,
@@ -75,6 +80,12 @@ public class SecurityAccessDecisionManager implements AccessDecisionManager {
 	public boolean supports(Class<?> clazz) {
 		// TODO Auto-generated method stub
 		return true;
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		System.out.println("SecurityAccessDecisionManager 加载完成.");
+		
 	}
 
 }

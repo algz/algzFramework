@@ -73,4 +73,9 @@
     </filter-mapping> -->
     <!-- springsecrity设置结束 -->
     
+    <!-- 申明taglib本地化,将在JSP中使用 
+    <taglib>
+        <taglib-uri>http://java.sun.com/jsp/jstl/core1</taglib-uri>
+        <taglib-location>/WEB-INF/c.tld</taglib-location>
+    </taglib>-->
 </web-app>

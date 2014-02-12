@@ -15,3 +15,27 @@ http://localhost:8080/algzFramework/hello
  6）登录
  7）验证并授权(MyUserDetailServiceImpl:loadUserByUsername)
  8）重复4,5
+ 
+ 工具:
+ 1.YED:画流程图的小巧软件.
+ 2.eclipse 插件 propedit: 自动把.properties 文件编码国际化,并编辑时以中文展示.
+
+Spring security 授权管理用二个接口完成:
+(1)决策管理器: AccessDecisionManager (decide方法,实现决策逻辑,决定最终的结果)
+(2)投票器: AccessDecisionVoter (vote方法，实现了投票的逻辑)
+
+Spring security 决策管理器:
+AccessDecisionManager完成授权的功能。观察AccessDecisionManager接口的授权方法
+void decide(Authentication authentication, Object object, ConfigAttributeDefinition config)
+        throws AccessDeniedException, InsufficientAuthenticationException;
+对一次访问授权，需要传入三个信息。
+（1）认证过的票据Authentication，确定了谁正在访问资源。
+（2）被访问的资源object。
+（3）访问资源要求的权限配置ConfigAttributeDefinition。
+从票据中可以获取认证用户所拥有的权限，再对比访问资源要求的权限，即可断定当前认证用户是否能够访问该资源。
+Spring security 提供一个决策管理器接口(AccessDecisionManager),其继承接口的抽象类为AbstractAccessDecisionManager,
+抽像类有三个不同方式的实现类(AffirmativeBased、ConsensusBased、UnanimousBased)，各自决策的区别是： 
+AffirmativeBased：只要有一个voter投同意票，就授权成功 .
+ConsensusBased：只要投同意票的大于投反对票的，就授权成功 .
+UnanimousBased：需要一致通过才授权成功,具体决策规则很简单，只是根据voter返回的结果做处理 
+总结:spring security 决策管理器已经很好了,通常使用AffirmativeBased,不需重新定义新的决策器,如果要定义最好继承抽像类而不是接口开始.

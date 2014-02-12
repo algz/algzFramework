@@ -43,7 +43,7 @@ public class AppWebAppInitializer implements WebApplicationInitializer {
 		// Register Servlet // Register and map the dispatcher servlet
 		ServletRegistration.Dynamic dispatcher = servletContext.addServlet("dispatcher", new DispatcherServlet(rootContext));
 		dispatcher.setLoadOnStartup(1);
-		dispatcher.addMapping("/*");
+		dispatcher.addMapping("/");
 		/**SpringMVC配置文件结束*/
 		
         // Register Filter 
