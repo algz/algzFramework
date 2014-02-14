@@ -40,6 +40,7 @@ public class SecurityFilter extends AbstractSecurityInterceptor implements
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response,
 			FilterChain chain) throws IOException, ServletException {
+		System.out.println("SecurityFilter 过滤器加载");
 		FilterInvocation fi = new FilterInvocation(request, response, chain);
 		// object为FilterInvocation对象
 		// super.beforeInvocation(fi);源码
@@ -50,9 +51,10 @@ public class SecurityFilter extends AbstractSecurityInterceptor implements
 		// this.accessDecisionManager.decide(authenticated, object, attributes);
 		//核心的InterceptorStatusToken token = super.beforeInvocation(fi);会调用我们定义的accessDecisionManager:decide(Object object)和securityMetadataSource:getAttributes(Object object)方法。
 		InterceptorStatusToken token = super.beforeInvocation(fi);
-		try {
+		try {	
 			fi.getChain().doFilter(fi.getRequest(), fi.getResponse());
 		} finally {
+			//super.finallyInvocation(token);
 			super.afterInvocation(token, null);
 		}
 	}

@@ -25,7 +25,6 @@ import org.springframework.security.web.context.AbstractSecurityWebApplicationIn
 </filter-mapping>
  *
  */
-@Order(1)
 public class SecurityWebApplicationInitializer extends
 		AbstractSecurityWebApplicationInitializer {
 }

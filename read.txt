@@ -6,7 +6,8 @@ http://localhost:8080/algzFramework/hello
 
 
 三、流程
- 1）容器启动(MySecurityMetadataSource：loadResourceDefine加载系统资源与权限列表)
+ 1）用户登陆后,加载其所有权限
+ //容器启动(MySecurityMetadataSource：loadResourceDefine加载系统资源与权限列表)
  2）用户发出请求
  3）过滤器拦截(SecurityFilter:doFilter)
  4）取得请求资源所需权限(MySecurityMetadataSource:getAttributes)

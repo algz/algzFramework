@@ -12,8 +12,8 @@ CREATE TABLE 'A_USERS' (
 -- 2.角色表
 CREATE TABLE 'A_AUTOINCREMENT' (
 'ROLEID'  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-'ROLENAME'  TEXT(50),
-'ENABLED'  INTEGER
+'ROLENAME'  TEXT(50), --角色名称
+'ENABLED'  INTEGER --角色是否有效,有效1,无效0
 );
  
 -- 3 用户_角色表
@@ -25,29 +25,18 @@ CONSTRAINT 'FK_UR_U' FOREIGN KEY ('USERID') REFERENCES 'A_USERS' ('USERID'),
 CONSTRAINT 'FK_UR_R' FOREIGN KEY ('ROLEID') REFERENCES 'A_ROLES' ('ROLESID')
 );
  
-   4.资源表resources
-   CREATE TABLE `resources` (
-     `memo` varchar(255) default NULL,
-     -- 权限所对应的url地址
-     `url` varchar(255) default NULL,
-     --优先权
-     `priority` int(11) default NULL,
-     --类型
-     `type` int(11) default NULL,
-     --权限所对应的编码，例201代表发表文章
-     `name` varchar(255) default NULL,
-     `id` int(11) NOT NULL auto_increment,
-     PRIMARY KEY  (`id`)
-   )
+--  4.资源表resources
+CREATE TABLE 'A_RESOURCES' (
+'RECOURCEID'  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+'RECOURCENAME' TEXT(50)
+'URL'  TEXT(255)
+);
  
-   5.角色_资源表roles_resources
-    CREATE TABLE `roles_resources` (
-      `rsid` int(11) default NULL,
-      `rid` int(11) default NULL,
-      `rrId` int(11) NOT NULL auto_increment,
-      PRIMARY KEY  (`rrId`),
-      KEY `rid` (`rid`),
-      KEY `roles_resources_ibfk_2` (`rsid`),
-      CONSTRAINT `roles_resources_ibfk_2` FOREIGN KEY (`rsid`) REFERENCES `resources` (`id`),
-      CONSTRAINT `roles_resources_ibfk_1` FOREIGN KEY (`rid`) REFERENCES `roles` (`id`)
-      )
+-- 5.角色_资源表roles_resources
+CREATE TABLE 'A_ROLES_RESOURCES' (
+'ROLE_RESOURCE_SID'  INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+'ROLEID'  INTEGER,
+'RESOURCEID'  INTEGER,
+FOREIGN KEY ('ROLEID') REFERENCES 'A_ROLES' ('ROLEID'),
+FOREIGN KEY ('RESOURCEID') REFERENCES 'A_RESOURCES' ('RECOURCEID')
+);

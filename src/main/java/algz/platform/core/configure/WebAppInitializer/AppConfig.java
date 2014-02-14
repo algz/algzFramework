@@ -1,6 +1,8 @@
 package algz.platform.core.configure.WebAppInitializer;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -9,26 +11,25 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBean;
-import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.security.access.AccessDecisionManager;
-import org.springframework.security.access.intercept.AbstractSecurityInterceptor;
+import org.springframework.security.access.AccessDecisionVoter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
-import org.springframework.stereotype.Controller;
-import org.springframework.stereotype.Service;
+import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
-import algz.platform.core.configure.database.dialect.SQLiteDialect;
 import algz.platform.core.security.SecurityAccessDecisionManager;
 import algz.platform.core.security.SecurityFilter;
 import algz.platform.core.security.SecurityMetadataSource;
+import algz.platform.core.security.SecurityVoter;
 import algz.platform.core.security.resources.ResourcesDao;
 
 /**
@@ -45,8 +46,10 @@ import algz.platform.core.security.resources.ResourcesDao;
 @EnableWebMvc
 @EnableTransactionManagement  //声明式事务管理，通过spring root application context扫描包septem.config.app：
 //@PropertySource("/conf/jdbc.properties")
+@Order(1)
 public class AppConfig {
 
+	
 /* other version of the same beans - no autowiring, CGLIB magic only
 
   @Bean
@@ -85,9 +88,7 @@ public class AppConfig {
 
 	@Bean
 	public PlatformTransactionManager transactionManager() throws Exception {
-		HibernateTransactionManager bean = new HibernateTransactionManager();
-		bean.setSessionFactory(sessionFactory().getObject());
-		return bean;
+		return  new HibernateTransactionManager(sessionFactory().getObject());
 	}
 
 
@@ -123,15 +124,19 @@ public class AppConfig {
     Properties properties=new Properties();
 //    properties.put("hibernate.connection.driver_class", "org.sqlite.JDBC");
     properties.put("hibernate.dialect", "algz.platform.core.configure.database.dialect.SQLiteDialect");
-//    properties.put("hibernate.connection.url", "jdbc:sqlite:c:/sample.db");
+   // properties.setProperty("hibernate.max_fetch_depth", "3");
+    //properties.setProperty("hibernate.show_sql", "false");
+    //    properties.put("hibernate.connection.url", "jdbc:sqlite:c:/sample.db");
 //    properties.put("hibernate.connection.username", "");
 //    properties.put("hibernate.connection.password", "");
     
       LocalSessionFactoryBean factoryBean=new LocalSessionFactoryBean();
-//      factoryBean.setPackagesToScan(new String[]{"algz.platform.test"});//扫描model类
+//      factoryBean.setPackagesToScan(new String[]{"algz.platform.test"});
       //  sessionFactoryBean.setPackagesToScan("com.coderli.shurnim.*.model");
       factoryBean.setHibernateProperties(properties);
       factoryBean.setDataSource(dataSource());
+    //扫描model类,不然报Caused by: org.hibernate.MappingException: Unknown entity:
+      factoryBean.setPackagesToScan(new String[] {"algz.platform.core.security.*"});
       factoryBean.afterPropertiesSet();
       return factoryBean;
 
@@ -146,24 +151,14 @@ public class AppConfig {
   public DataSource dataSource() {
 //      //JDBC连接
   	DriverManagerDataSource dm=new DriverManagerDataSource("jdbc:sqlite:c:/sample.db","","");
-    dm.setDriverClassName("org.sqlite.JDBC");
+    //BasicDataSource ds = new BasicDataSource();
+  	dm.setDriverClassName("org.sqlite.JDBC");
   	return dm;
   }
 	
   
   /*********************** Spring Security 配置 *************************/
-//  @Bean
-//  public AbstractSecurityInterceptor securityFilter(){
-//	  SecurityFilter filter=new SecurityFilter();
-//	  filter.setAccessDecisionManager(accessDecisionManager());
-//	  filter.setSecurityMetadataSource(securityMetadataSource());
-//	  try {
-//		//filter.setAuthenticationManager(this.authenticationManager());
-//	} catch (Exception e) {
-//		e.printStackTrace();
-//	}
-//	  return filter;
-//  }
+
 //  
 //  /**
 //   * 访问决策器，决定某个用户具有的角色，是否有足够的权限去访问某个资源

@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.annotation.Resources;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.springframework.security.core.GrantedAuthority;
@@ -18,8 +19,9 @@ public class Roles implements GrantedAuthority {
 
 	private static final long serialVersionUID = ALGZCoreVersion.SERIAL_VERSION_UID;
 	
+	@Id
 	@Column
-	private BigDecimal roleid;
+	private Integer roleid;
 	
 	@Column
 	private String roleName;
@@ -27,11 +29,11 @@ public class Roles implements GrantedAuthority {
 	@Column
 	private String enabled;
 	
-	public BigDecimal getRoleid() {
+	public Integer getRoleid() {
 		return roleid;
 	}
 
-	public void setRoleid(BigDecimal roleid) {
+	public void setRoleid(Integer roleid) {
 		this.roleid = roleid;
 	}
 
@@ -45,6 +47,10 @@ public class Roles implements GrantedAuthority {
 
 	public void setRoleName(String roleName) {
 		this.roleName = roleName;
+	}
+
+	public String getRoleName() {
+		return roleName;
 	}
 
 	Set<Resources> getResources(){
