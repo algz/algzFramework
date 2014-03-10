@@ -36,9 +36,12 @@ import org.springframework.security.web.access.expression.DefaultWebSecurityExpr
 import org.springframework.security.web.access.expression.WebExpressionVoter;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
+import org.springframework.web.filter.GenericFilterBean;
+import org.springframework.web.servlet.mvc.BaseCommandController;
 
+import algz.platform.core.security.MyAccessDecisionManager;
+import algz.platform.core.security.MySecurityFilter;
 import algz.platform.core.security.SecurityAccessDecisionManager;
-import algz.platform.core.security.SecurityFilter;
 import algz.platform.core.security.SecurityMetadataSource;
 import algz.platform.core.security.SecurityVoter;
 import algz.platform.core.security.resources.ResourcesDao;
@@ -46,7 +49,6 @@ import algz.platform.core.security.resources.ResourcesDaoImpl;
 
 @Configuration
 @EnableWebMvcSecurity
-//@EnableWebSecurity
 //@EnableGlobalMethodSecurity(prePostEnabled=true)
 @Order(2)
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -59,6 +61,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     
     @Autowired
     private ResourcesDao resourcesDao;
+    
+    @Autowired
+    private SecurityMetadataSource securityMetadataSource;
+    
+    @Autowired
+    private MyAccessDecisionManager securityAccessDecisionManager;
+    
+	@Autowired
+	private AuthenticationManager authenticationManager; 
+    
+//    @Autowired
+//    private MySecurityFilter securityFilter;
     
 	/**
 <authentication-manager>
@@ -76,17 +90,37 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	 * */
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-       auth
+       
+    	auth
         .jdbcAuthentication()
-            .dataSource(dataSource)
-            .withUser("user").password("password").roles("USER").and()
-            .withDefaultSchema();
+            .dataSource(dataSource);
+            //以下语句会自动创建authorities,users表
+            //.withUser("user").password("password").roles("USER").and()
+            //.withDefaultSchema();
+       
+//    	  BindAuthenticator authenticator = new BindAuthenticator(contextSource);
+//    	          authenticator.setUserDnPatterns(new String[] { "uid={0},ou=people" });
+//    	          DefaultLdapAuthoritiesPopulator populator = new DefaultLdapAuthoritiesPopulator(contextSource, "ou=groups");
+//    	          populator.setGroupRoleAttribute("cn");
+//    	          populator.setGroupSearchFilter("uniqueMember={0}");
+//    	          AuthenticationProvider authProvider = new LdapAuthenticationProvider(
+//    	                  authenticator, populator);
+//    	          auth.authenticationProvider(authProvider);
+
+    	
 //        auth
 //            .inMemoryAuthentication()//.withObjectPostProcessor(objectPostProcessor)
 //                .withUser("user").password("password").roles("USER") //在内存中的验证”user”用户
 //                .and()
 //                .withUser("admin").password("password").roles("ADMIN","USER");
     }
+    
+    //用于配置Authentication，比如LDAP, Database连接，以及用户和角色的查询方法。
+        @Override
+        public void configure(AuthenticationManagerBuilder auth) throws Exception {
+
+        }
+
     
     /**
      * 
@@ -110,73 +144,58 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 </http>
      * 
      */
+      //用于配置URL的保护形式，和login页面。
     @Override
-    protected void configure(HttpSecurity http) throws Exception {
-
- 		//filter.afterPropertiesSet();
-  		
-//  	  List<AccessDecisionVoter> decisionVoters=new ArrayList<AccessDecisionVoter>();
-//  	  RoleVoter roleVoter=new RoleVoter();
-//  	  roleVoter.setRolePrefix("");
-//  	  decisionVoters.add(roleVoter);
-//  	AccessDecisionManager accessDecisionManager= new AffirmativeBased(decisionVoters);
-//  		
-//        http
-//          .userDetailsService(userService)
-//          .apply(new UrlAuthorizationConfigurer())
-//          .getRegistry()
-//            .accessDecisionManager(accessDecisionManager())
-//            .antMatchers("/signup","/about").anonymous() // 任何人(包括没有经过验证的)都可以访问”/signup”和”/about”
-// 	        .antMatchers("/admin/**").hasRole("ADMIN")
-// 	        ; // “/admin/”开头的URL必须要是管理员用户，譬如”admin”用户
-    	
-            //.anyRequest()..authenticated().and()
-    	
+    protected void configure(HttpSecurity http) throws Exception {	
         http  
+            //.antMatcher("/index.jsp").anonymous()
+            //.and()
+            .csrf().disable()
             .userDetailsService(userService) 
+            //增加自定义的过滤器到过滤链
+            //.addFilterBefore(securityFilter, FilterSecurityInterceptor.class)
+            
             .addFilterBefore(securityFilter(), FilterSecurityInterceptor.class)
-            //.apply(new UrlAuthorizationConfigurer())
-            //.getRegistry()//
             .authorizeRequests() //Allows restricting access based upon the HttpServletRequest using 
-                .accessDecisionManager(accessDecisionManager())
-                .antMatchers("/signup","/about").anonymous()//.permitAll() // 任何人(包括没有经过验证的)都可以访问”/signup”和”/about”
-    	        .antMatchers("/admin1/**").hasRole("ADMIN12_") // “/admin/”开头的URL必须要是管理员用户，譬如”admin”用户
-                .antMatchers("/hello1/**").hasAuthority("ADMIN11_") //使用hasRole("ADMIN12"),则对ADMIN12自动 加ROLE_前缀
-    	        .anyRequest().hasRole("USER12_")//.authenticated() //指定的URL允许任何已验证的用户访问   Specify that URLs are allowed by any authenticated user.
+               // .accessDecisionManager(securityAccessDecisionManager)//(accessDecisionManager())
+                //.antMatchers("/login","/about").anonymous()//.permitAll() // 任何人(包括没有经过验证的)都可以访问”/signup”和”/about”
+//                .antMatchers("/resources/**").permitAll()
+//    	        .antMatchers("/admin1/**").hasRole("ADMIN12_") // “/admin/”开头的URL必须要是管理员用户，譬如”admin”用户
+//                .antMatchers("/hello1/**").hasAuthority("ADMIN11_") //使用hasRole("ADMIN12"),则对ADMIN12自动 加ROLE_前缀
+    	        //.anyRequest().authenticated() //指定的URL允许任何已验证的用户访问   Specify that URLs are allowed by any authenticated user.
                 .and()
             .formLogin() //使用Java配置默认值设置了基于表单的验证。使用POST提交到”/login”时，需要用”username”和”password”进行验证。
-                //.loginPage("/crm/signin.html")
-                //.loginProcessingUrl("/login") // 注明了登陆页面，意味着用GET访问”/login”时，显示登陆页面
-    	        //.defaultSuccessUrl("/crm/welcome.html")
-    	        //.failureUrl("/crm/signin.html?error=true")
-				//.usernameParameter("username")
-				//.passwordParameter("password")
-                .permitAll() // 任何人(包括没有经过验证的)都可以访问”/login”和”/login?error”。permitAll()是指用户可以访问formLogin()相关的任何URL。
+                .loginPage("/login.html")//.loginPage("/platform/login.html") //指定登陆页面，如果未认证访问保护资源，则跳转到此页面。
+                //.loginProcessingUrl("/login") // 登陆时的form action提交名，仅仅处理HTTP POST,意味着用访问”/login”时，显示登陆页面
+    	        .defaultSuccessUrl("/index.html")//登录成功后跳转到哪个页面
+                .failureUrl("/loginfailed")//登录失败时跳转到哪个页面
+				.usernameParameter("username")//登陆时的用户参数名
+				.passwordParameter("password")//登陆时的密码参数名
+                .permitAll() //让login.html人人可访问，否则会导致递归跳转。// 任何人(包括没有经过验证的)都可以访问”/login”和”/login?error”。permitAll()是指用户可以访问formLogin()相关的任何URL。
                 .and()
             .logout() //As you might expect, logout().permitAll() allows any user to request logout and view logout success URL.              
-                .permitAll();
+                .logoutSuccessUrl("/logout")    
+                .permitAll()
+                .and()
+             .exceptionHandling()
+                .accessDeniedPage("/platform/error/error-404.jsp");
             //.httpBasic(); //HTTP Basic Authentication is supported
-        
-//    	List<Filter> filters=http.getOrBuild().getFilters();
-//    	for(Filter f:filters){
-//    		if(f instanceof FilterSecurityInterceptor ){
-//    			((FilterSecurityInterceptor)f).setSecurityMetadataSource(securityMetadataSource());
-//    		}
-//    	}
     }
 
     
     /**
      <http security="none" pattern="/resources/**"/>
+            忽略任何以”/resources/”开头的请求，这和在XML配置http@security=none的效果一样
+           用于配置类似防火墙，放行某些URL。
      */
     @Override
     public void configure(WebSecurity web) throws Exception {
-    	//Object o=this.filterSecurityInterceptor;
       web
         .ignoring()
-           //忽略任何以”/resources/”开头的请求，这和在XML配置http@security=none的效果一样
-           .antMatchers("/resources/**"); // <http security="none" pattern="/resources/**"/>
-    }
+           .antMatchers("/**/*.js")
+           .antMatchers("/**/*.css")
+           .antMatchers("/**/*.html"); 
+    }//已验证,没问题.
     
     
     
@@ -184,39 +203,29 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * 访问决策器，决定某个用户具有的角色，是否有足够的权限去访问某个资源
      * @return
      */
-      @Bean
-       public AccessDecisionManager accessDecisionManager(){
-      	 
-  	  List<AccessDecisionVoter> decisionVoters=new ArrayList<AccessDecisionVoter>();
-  	  //decisionVoters.add((AccessDecisionVoter)roleVoter());
-        //decisionVoters.add(new AuthenticatedVoter());
-//  	  WebExpressionVoter webExpressionVoter= new WebExpressionVoter();
-//  	  SecurityExpressionHandler<FilterInvocation> expressionHandler = new DefaultWebSecurityExpressionHandler();
-//  	  webExpressionVoter.setExpressionHandler(expressionHandler);
-//        decisionVoters.add(webExpressionVoter);
-  	  decisionVoters.add(new SecurityVoter());
-        
-        SecurityAccessDecisionManager accessDecisionManager=new SecurityAccessDecisionManager(decisionVoters);
-        // 没有显式定义的资源都保护起来。该属性默认值为false 
-        accessDecisionManager.setAllowIfAllAbstainDecisions(false);
-        return accessDecisionManager;//new SecurityAccessDecisionManager();
-    }
-    
-//    @Bean
-//    public SecurityFilter filterSecurityInterceptor(){
-//    	    SecurityFilter filter=new SecurityFilter();
-//  	    filter.setAccessDecisionManager(accessDecisionManager());
-//  	    filter.setSecurityMetadataSource(securityMetadataSource());
-//  		try {
-//  			filter.setAuthenticationManager(this.authenticationManagerBean());
-//  			filter.afterPropertiesSet();
-//  		} catch (Exception e) {
-//  			// TODO Auto-generated catch block
-//  			e.printStackTrace();
-//  		}
-//  		return filter;
+//      @Bean
+//       public AccessDecisionManager accessDecisionManager(){
+//      	 
+//  	  List<AccessDecisionVoter> decisionVoters=new ArrayList<AccessDecisionVoter>();
+//  	  //decisionVoters.add((AccessDecisionVoter)roleVoter());
+//        //decisionVoters.add(new AuthenticatedVoter());
+////  	  WebExpressionVoter webExpressionVoter= new WebExpressionVoter();
+////  	  SecurityExpressionHandler<FilterInvocation> expressionHandler = new DefaultWebSecurityExpressionHandler();
+////  	  webExpressionVoter.setExpressionHandler(expressionHandler);
+////        decisionVoters.add(webExpressionVoter);
+//  	  
+//  	    //自定义投票器,用于匹配自定义的资源数据定义
+//  	    decisionVoters.add(new SecurityVoter());
+//        
+//        SecurityAccessDecisionManager accessDecisionManager=new SecurityAccessDecisionManager(decisionVoters);
+//        // 该属性默认值为false ,即没有显式定义的资源都保护起来。
+//        accessDecisionManager.setAllowIfAllAbstainDecisions(false);
+//        return accessDecisionManager;//new SecurityAccessDecisionManager();
 //    }
     
+    /**
+     * 授权管理器(调用SpringSecurity的授权管理器提供给自定义的过滤器用)
+     */
     @Bean
     public AuthenticationManager authenticationManagerBean()
             throws Exception {
@@ -227,18 +236,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * 资源源数据定义，将所有的资源和权限对应关系建立起来，即定义某一资源可以被哪些角色访问
      * @return
      */
-    @Bean
-    public FilterInvocationSecurityMetadataSource securityMetadataSource(){
-  	  return new SecurityMetadataSource(this.resourcesDao);
-    }
+//    @Bean
+//    public FilterInvocationSecurityMetadataSource securityMetadataSource(){
+//  	  return new SecurityMetadataSource(this.resourcesDao);
+//    }
     
+    /**
+     * 自定义一个过滤器并赋值自定义的决策器,授权管理器,资源源数据定义.
+     * 
+     *  SpringSecurity的过滤器链调用类:public class FilterChainProxy extends GenericFilterBean 
+     * 
+     * 由于不能直接对SpringSecurity的过滤器FilterSecurityInterceptor赋值相关参数,
+     * 所以只能重新创建一个FilterSecurityInterceptor过滤器赋给自定义参数后,
+     * 把自定义的过滤器加入到SpringSecurity的FilterSecurityInterceptor过滤器前,
+     * 因为SpringSecurity的FilterSecurityInterceptor具有防重调用功能,
+     * 所以执行完自定义的过滤器FilterSecurityInterceptor后就不会在执行自已的过滤器FilterSecurityInterceptor了.
+     * @return
+     */
     @Bean
     public FilterSecurityInterceptor securityFilter(){
   	  FilterSecurityInterceptor filter=new FilterSecurityInterceptor();
-  	  filter.setAccessDecisionManager(accessDecisionManager());
-  	  filter.setSecurityMetadataSource(securityMetadataSource());
+  	  filter.setAccessDecisionManager(securityAccessDecisionManager);//(accessDecisionManager());
+  	  filter.setSecurityMetadataSource(securityMetadataSource);
   	  try {
-  		filter.setAuthenticationManager(authenticationManagerBean());
+  		filter.setAuthenticationManager(authenticationManager);//(authenticationManagerBean());
   	} catch (Exception e) {
   		e.printStackTrace();
   	}

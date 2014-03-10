@@ -1,4 +1,4 @@
-package algz.platform.core.util.excel;
+package algz.platform.util.excel;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;

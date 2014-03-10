@@ -20,6 +20,13 @@ public class UsersDaoImpl implements UsersDao{
 		 return user;
 	}
 
+	public Users findUserByUsername(String username) {
+		String sql="select * from A_USERS u where u.USERNAME='"+username+"'";
+		Users user= (Users)sessionFactory.openSession().createSQLQuery(sql)
+		              .addEntity(Users.class).uniqueResult();
+		 return user;
+	}
+	
 	@Override
 	public Roles getRoles(String userid) {
 		// TODO Auto-generated method stub

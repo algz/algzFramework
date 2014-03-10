@@ -1,4 +1,4 @@
-package algz.platform.test;
+package test;
 
 public interface SQLiteDao {
 

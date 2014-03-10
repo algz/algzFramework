@@ -1,5 +1,10 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+    <%
+String path = request.getContextPath();
+String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path;
+
+%>
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -12,7 +17,7 @@
 <script src="//code.jquery.com/jquery-1.10.1.min.js"></script>
 
 <!-- Font Awesome图标字体 -->
-<link rel="stylesheet" href="/algz-ui/platform/common/font-Awesome/css/font-awesome.min.css">
+<link rel="stylesheet" href="${basePath}/platform/common/font-Awesome/css/font-awesome.min.css">
 
 <!-- 最新 Bootstrap 核心 CSS 文件 -->
 <link rel="stylesheet" href="/algz-ui/platform/common/bootstrap3/css/bootstrap.min.css">

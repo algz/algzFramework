@@ -11,6 +11,7 @@ import org.springframework.security.access.vote.AbstractAccessDecisionManager;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Service;
 
 
 /**
@@ -46,43 +47,6 @@ import org.springframework.security.core.GrantedAuthority;
  */
 public class SecurityAccessDecisionManager extends AbstractAccessDecisionManager {
 
-//	@Override
-//	public void decide(Authentication authentication, Object object,
-//			Collection<ConfigAttribute> configAttributes)
-//			throws AccessDeniedException, InsufficientAuthenticationException {
-//		if (configAttributes == null) {
-//			return;
-//		}
-//		// 所请求的资源拥有的权限(一个资源对多个权限)
-//		Iterator<ConfigAttribute> iterator = configAttributes.iterator();
-//		while (iterator.hasNext()) {
-//			ConfigAttribute configAttribute = iterator.next();
-//			// 访问所请求资源所需要的权限
-//			String needPermission = configAttribute.getAttribute();
-//			System.out.println("needPermission is " + needPermission);
-//			// 用户所拥有的权限authentication
-//			for (GrantedAuthority ga : authentication.getAuthorities()) {
-//				if (needPermission.equals(ga.getAuthority())) {
-//					return;
-//				}
-//			}
-//		}
-//		// 没有权限
-//		throw new AccessDeniedException(" 没有权限访问！ ");
-//
-//	}
-
-//	@Override
-//	public boolean supports(ConfigAttribute attribute) {
-//		return true;
-//	}
-//
-//	@Override
-//	public boolean supports(Class<?> clazz) {
-//		// TODO Auto-generated method stub
-//		return true;
-//	}
-
     public SecurityAccessDecisionManager(List<AccessDecisionVoter> decisionVoters) {
         super(decisionVoters);
     }
@@ -97,27 +61,6 @@ public class SecurityAccessDecisionManager extends AbstractAccessDecisionManager
 	public void decide(Authentication authentication, Object object,
 			Collection<ConfigAttribute> configAttributes)
 			throws AccessDeniedException, InsufficientAuthenticationException {
-		
-		
-//			if(configAttributes == null) {
-//			return;
-//			}
-//			//所请求的资源拥有的权限(一个资源对多个权限)
-//			Iterator<ConfigAttribute> iterator = configAttributes.iterator();
-//			while(iterator.hasNext()) {
-//			ConfigAttribute configAttribute = iterator.next();
-//			//访问所请求资源所需要的权限
-//			String needPermission = configAttribute.getAttribute();
-//			System.out.println("needPermission is " + needPermission);
-//			//用户所拥有的权限authentication
-//			for(GrantedAuthority ga : authentication.getAuthorities()) {
-//			if(needPermission.equals(ga.getAuthority())) {
-//			return;
-//			}
-//			}
-//			}
-//			//没有权限
-//			throw new AccessDeniedException(" 没有权限访问！ ");
 		
         int deny = 0;
         
@@ -141,7 +84,7 @@ public class SecurityAccessDecisionManager extends AbstractAccessDecisionManager
 
         if (deny > 0) {
             throw new AccessDeniedException(messages.getMessage("AbstractAccessDecisionManager.accessDenied",
-                    "Access is denied"));
+                    "拒绝访问"));
         }
 
         // To get this far, every AccessDecisionVoter abstained

@@ -42,6 +42,7 @@ public class AppWebAppInitializer implements WebApplicationInitializer {
 		dispatcher.addMapping("/");
 		/**SpringMVC配置文件结束*/
 		
+		/**对springSecurityFilterChain定义映射路径。我们很容易通过继承AbstractSecurityWebApplicationInitializer实现，并可以有选择的通过覆盖方法来定制映射。*/
         // Register Filter 
 //        FilterRegistration filter = servletContext.addFilter("springSecurityFilterChain", 
 //            DelegatingFilterProxy.class); 

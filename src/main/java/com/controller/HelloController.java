@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
-import algz.platform.core.util.excel.ExcelService;
-import algz.platform.core.util.excel.ExcelView;
+import algz.platform.util.excel.ExcelService;
+import algz.platform.util.excel.ExcelView;
 
 import com.service.HelloService;
 
@@ -31,7 +31,7 @@ public class HelloController {
 	
     @RequestMapping(value="/hello")
     public ModelAndView  printHello() {
-        return new ModelAndView("hello", "message", "Hello Spring to "+helloService.printHello()+" !");
+        return new ModelAndView("pages/hello", "message", "Hello Spring to "+helloService.printHello()+" !");
     }
     
     

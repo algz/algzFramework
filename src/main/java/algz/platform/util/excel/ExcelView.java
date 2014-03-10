@@ -1,7 +1,7 @@
 /**
  * 
  */
-package algz.platform.core.util.excel;
+package algz.platform.util.excel;
 
 import java.io.OutputStream;
 import java.sql.ResultSet;

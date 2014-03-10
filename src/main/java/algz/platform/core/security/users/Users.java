@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -12,6 +13,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
+import org.hibernate.annotations.GenericGenerator;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -30,7 +32,8 @@ public class Users implements UserDetails {
 	private static final long serialVersionUID = ALGZCoreVersion.SERIAL_VERSION_UID;
 	
 	@Id
-	@Column
+	@GeneratedValue(generator ="id")
+	@GenericGenerator(strategy ="native", name = "id")
 	private Integer userid;
 
 	@Column
@@ -39,16 +42,16 @@ public class Users implements UserDetails {
 	@Column
     private String password;
 	
-	
+	@Column
     private boolean accountNonExpired;
 	
-	
+	@Column
     private boolean accountNonLocked;
 	
-	
+	@Column
     private boolean credentialsNonExpired;
 	
-	
+	@Column
     private boolean enabled;
 	
 //	@Formula ("(select DISTINCT RO.ROLENAME from A_USERS U INNER JOIN A_USERS_ROLES UR ON U.USERID=UR.ROLEID INNER JOIN A_ROLES RO ON RO.ROLEID=UR.ROLEID WHERE U.USERID=userid )")  

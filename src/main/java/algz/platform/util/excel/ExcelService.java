@@ -1,4 +1,4 @@
-package algz.platform.core.util.excel;
+package algz.platform.util.excel;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
