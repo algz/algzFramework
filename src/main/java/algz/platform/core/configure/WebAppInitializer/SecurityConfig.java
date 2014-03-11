@@ -36,11 +36,16 @@ import org.springframework.security.web.access.expression.DefaultWebSecurityExpr
 import org.springframework.security.web.access.expression.WebExpressionVoter;
 import org.springframework.security.web.access.intercept.FilterInvocationSecurityMetadataSource;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.filter.GenericFilterBean;
 import org.springframework.web.servlet.mvc.BaseCommandController;
 
 import algz.platform.core.security.MyAccessDecisionManager;
 import algz.platform.core.security.MySecurityFilter;
+import algz.platform.core.security.MyUsernamePasswordAuthenticationFilter;
 import algz.platform.core.security.SecurityAccessDecisionManager;
 import algz.platform.core.security.SecurityMetadataSource;
 import algz.platform.core.security.SecurityVoter;
@@ -71,6 +76,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 	@Autowired
 	private AuthenticationManager authenticationManager; 
     
+//	@Autowired
+//	private UsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter;
+	
 //    @Autowired
 //    private MySecurityFilter securityFilter;
     
@@ -147,12 +155,15 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
       //用于配置URL的保护形式，和login页面。
     @Override
     protected void configure(HttpSecurity http) throws Exception {	
-        http  
+        http 
+           
             //.antMatcher("/index.jsp").anonymous()
             //.and()
             .csrf().disable()
+            
             .userDetailsService(userService) 
             //增加自定义的过滤器到过滤链
+            .addFilter(usernamePasswordAuthenticationFilter())
             //.addFilterBefore(securityFilter, FilterSecurityInterceptor.class)
             
             .addFilterBefore(securityFilter(), FilterSecurityInterceptor.class)
@@ -165,10 +176,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     	        //.anyRequest().authenticated() //指定的URL允许任何已验证的用户访问   Specify that URLs are allowed by any authenticated user.
                 .and()
             .formLogin() //使用Java配置默认值设置了基于表单的验证。使用POST提交到”/login”时，需要用”username”和”password”进行验证。
-                .loginPage("/login.html")//.loginPage("/platform/login.html") //指定登陆页面，如果未认证访问保护资源，则跳转到此页面。
-                //.loginProcessingUrl("/login") // 登陆时的form action提交名，仅仅处理HTTP POST,意味着用访问”/login”时，显示登陆页面
-    	        .defaultSuccessUrl("/index.html")//登录成功后跳转到哪个页面
-                .failureUrl("/loginfailed")//登录失败时跳转到哪个页面
+                .loginPage("/platform/login.jsp")//指定登陆页面，如果未认证访问保护资源，则跳转到此页面。
+                //.loginProcessingUrl("/j_spring_security_check") // 登陆时的form action提交名，仅仅处理HTTP POST,意味着用访问”/login”时，显示登陆页面
+    	        //.defaultSuccessUrl("/index.html")//登录成功后跳转到哪个页面
+                //.failureUrl("/loginfailed")//登录失败时跳转到哪个页面
 				.usernameParameter("username")//登陆时的用户参数名
 				.passwordParameter("password")//登陆时的密码参数名
                 .permitAll() //让login.html人人可访问，否则会导致递归跳转。// 任何人(包括没有经过验证的)都可以访问”/login”和”/login?error”。permitAll()是指用户可以访问formLogin()相关的任何URL。
@@ -178,8 +189,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .and()
              .exceptionHandling()
-                .accessDeniedPage("/platform/error/error-404.jsp");
-            //.httpBasic(); //HTTP Basic Authentication is supported
+                .accessDeniedPage("/platform/error/error-404.jsp")
+              //  .and()
+            //.httpBasic().authenticationEntryPoint(loginUrlAuthenticationEntryPoint())
+            ; //HTTP Basic Authentication is supported
     }
 
     
@@ -194,7 +207,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .ignoring()
            .antMatchers("/**/*.js")
            .antMatchers("/**/*.css")
-           .antMatchers("/**/*.html"); 
+           .antMatchers("/**/*.html"); ; 
     }//已验证,没问题.
     
     
@@ -266,4 +279,75 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
   	  return filter;
     }
     
+    /**
+     *     <!-- 登录验证器 -->  
+    <beans:bean id="loginFilter"  
+        class="com.huaxin.security.MyUsernamePasswordAuthenticationFilter">  
+        <!-- 处理登录的action -->  
+        <beans:property name="filterProcessesUrl" value="/j_spring_security_check"></beans:property>  
+                <!-- 验证成功后的处理-->  
+        <beans:property name="authenticationSuccessHandler" ref="loginLogAuthenticationSuccessHandler"></beans:property>  
+                <!-- 验证失败后的处理-->  
+        <beans:property name="authenticationFailureHandler" ref="simpleUrlAuthenticationFailureHandler"></beans:property>  
+        <beans:property name="authenticationManager" ref="myAuthenticationManager"></beans:property>  
+        <!-- 注入DAO为了查询相应的用户 -->  
+        <beans:property name="usersDao" ref="usersDao"></beans:property>  
+    </beans:bean>  
+     * @return
+     */
+    @Bean
+    public MyUsernamePasswordAuthenticationFilter usernamePasswordAuthenticationFilter(){
+    	MyUsernamePasswordAuthenticationFilter filter=new MyUsernamePasswordAuthenticationFilter();
+    	//处理登录的action
+    	filter.setFilterProcessesUrl("/j_spring_security_check");
+  	    //验证成功后的处理
+  	    filter.setAuthenticationSuccessHandler(loginLogAuthenticationSuccessHandler());
+  	    //验证失败后的处理
+  	    filter.setAuthenticationFailureHandler(simpleUrlAuthenticationFailureHandler());
+  	    filter.setAuthenticationManager(authenticationManager);
+  	    
+    	return filter;
+    }
+    
+    /**
+     * 为了在未登陆的时候，跳转到哪个页面，不配也会抛异常。
+     * @return
+     */
+    @Bean
+    public LoginUrlAuthenticationEntryPoint loginUrlAuthenticationEntryPoint(){
+    	return new LoginUrlAuthenticationEntryPoint("/platform/login.jsp");
+    }
+    
+
+    /**
+     * 验证成功后的处理
+     *     <beans:bean id="loginLogAuthenticationSuccessHandler"  
+            class="org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler">  
+            <beans:property name="defaultTargetUrl" value="/index.jsp"></beans:property>  
+        </beans:bean> 
+     * @return
+     */
+    @Bean
+    public SavedRequestAwareAuthenticationSuccessHandler loginLogAuthenticationSuccessHandler(){
+    	SavedRequestAwareAuthenticationSuccessHandler handler= new SavedRequestAwareAuthenticationSuccessHandler();
+    	handler.setDefaultTargetUrl("/platform/index.jsp");
+    	return handler;
+    }   
+    
+    /**
+     * 验证失败后的处理
+    <beans:bean id="simpleUrlAuthenticationFailureHandler"  
+            class="org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler">  
+            <!-- 可以配置相应的跳转方式。属性forwardToDestination为true采用forward false为sendRedirect -->  
+            <beans:property name="defaultFailureUrl" value="/login.jsp"></beans:property>  
+        </beans:bean>  
+     * @return
+     */
+    @Bean
+    public SimpleUrlAuthenticationFailureHandler simpleUrlAuthenticationFailureHandler(){
+    	SimpleUrlAuthenticationFailureHandler handler= new SimpleUrlAuthenticationFailureHandler();
+    	handler.setDefaultFailureUrl("/platform/login.jsp?error=1");
+    	return handler;
+    } 
+
 }

@@ -65,7 +65,7 @@ public class AppConfig  extends WebMvcConfigurerAdapter{
   @Bean
   public ViewResolver viewResolver(){
       InternalResourceViewResolver resolver =new InternalResourceViewResolver();
-      resolver.setPrefix("WEB-INF/");
+      resolver.setPrefix("/");//("/WEB-INF/");
       resolver.setSuffix(".jsp");
       return resolver;
   }
@@ -97,15 +97,15 @@ public class AppConfig  extends WebMvcConfigurerAdapter{
 
 后缀,url参数都有,后缀优先得到mediaType是xml格式:http://localhost:8080/gradletest-1.0/sample/test.xml?mediaType=json
    */
-//  @Override  
-//  public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {  
-//      configurer.favorPathExtension(true).useJaf(false)  
-//              .favorParameter(true).parameterName("mediaType")  
-//              .ignoreAcceptHeader(true).  
-//              //defaultContentType(MediaType.APPLICATION_JSON).  
-//              mediaType("xml", MediaType.APPLICATION_XML).  
-//              mediaType("json", MediaType.APPLICATION_JSON);  
-//  }  
+  @Override  
+  public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {  
+      configurer.favorPathExtension(true).useJaf(false)  
+              .favorParameter(true).parameterName("mediaType")  
+              .ignoreAcceptHeader(true).  
+              //defaultContentType(MediaType.APPLICATION_JSON).  
+              mediaType("xml", MediaType.APPLICATION_XML).  
+              mediaType("json", MediaType.APPLICATION_JSON);  
+  }  
   
 //  
 //  //****************spring开始配置***************************
